@@ -1,0 +1,89 @@
+---
+title: "Earthquakes off Fiji"
+subtitle: "Location and Magnitude"
+author: "Vanda Dias"
+date: "2 July 2017"
+runtime: shiny
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Website Application
+
+An website app has been created to show the location and magnitude of earthquakes near the Fiji islands. It is based on a data set from the datasets R package, quakes, that gives the locations of 1000 earthquakes off Fiji, since 1964 and of magnitude higher than 4.0 (Richter scale).
+
+This app allows the user to select a group of data points based on a range of magnitude, and provides its map and data table with the location and characteristics of the group of earthquakes selected.
+
+https://vandasdias.shinyapps.io/EarthquakesoffFiji/
+
+
+## Instructions
+
+1. Select throughout the slider, the range of the earthquakes´ magnitude to be shown,
+
+2. In the main panel there are other two tabs that show the map and the data table associated with the selection,
+
+2.1. The map tab shows the location of the selected earthquakes and it pops up their characteristics as latitude, longitude, depth and magnitude,
+
+2.2. The table tab shows all the characteristics of the earthquakes selection in a data table,
+
+3. As you move the slider, the selected points change automatically.
+
+
+## Map
+
+```{r echo = FALSE}
+library(shiny)
+library(leaflet)
+earthquakes <- datasets::quakes
+earthquakes$popup <- paste("Richter magnitude ", earthquakes$mag, "<br>", "Depth", earthquakes$depth, " km")
+sidebarLayout(
+    sidebarPanel(
+      h6("Earthquakes' magnitude selected:"),
+      renderText({
+        paste(input$slider[1], " to ", input$slider[2])
+      }),
+      h2("---"),
+      sliderInput("slider", "Select range of values", 4.0, 6.4, value = c(4.5, 5.0), 
+                  step = 0.1)
+    ),
+    mainPanel(
+      renderLeaflet({
+        minmag <- input$slider[1]
+        maxmag <- input$slider[2]
+        selection <- earthquakes[earthquakes$mag >= minmag & 
+                  earthquakes$mag <= maxmag, ]
+        selection %>%
+        leaflet() %>%
+        addTiles() %>%
+        addMarkers(popup = earthquakes$popup, clusterOptions = markerClusterOptions())
+      })
+    ))
+```
+
+
+## Table
+
+```{r echo = FALSE}
+sidebarLayout(
+    sidebarPanel(
+      h6("Earthquakes' magnitude selected:"),
+      renderText({
+        paste(input$slider2[1], " to ", input$slider2[2])
+      }),
+      h2("---"),
+      sliderInput("slider2", "Select range of values", 4.0, 6.4, value = c(4.5, 5.0), 
+                  step = 0.1)
+    ),
+    mainPanel(
+      renderTable({
+        minmag2 <- input$slider2[1]
+        maxmag2 <- input$slider2[2]
+        head(earthquakes[earthquakes$mag >= minmag2 & earthquakes$mag <= maxmag2, -6],10)
+      })
+    ))
+```
+
